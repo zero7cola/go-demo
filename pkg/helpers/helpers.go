@@ -1,6 +1,10 @@
 package helpers
 
-import "reflect"
+import (
+	mathrand "math/rand"
+	"reflect"
+	"time"
+)
 
 // Empty 类似于 PHP 的 empty() 函数
 func Empty(val interface{}) bool {
@@ -25,4 +29,23 @@ func Empty(val interface{}) bool {
 		return v.IsNil()
 	}
 	return reflect.DeepEqual(val, reflect.Zero(v.Type()).Interface())
+}
+
+// FirstElement 安全地获取 args[0]，避免 panic: runtime error: index out of range
+func FirstElement(args []string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	return ""
+}
+
+// RandomString 生成长度为 length 的随机字符串
+func RandomString(length int) string {
+	mathrand.Seed(time.Now().UnixNano())
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = letters[mathrand.Intn(len(letters))]
+	}
+	return string(b)
 }

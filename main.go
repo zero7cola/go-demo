@@ -1,109 +1,36 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	btsConfig "go1/config"
+	"github.com/gin-gonic/gin"
+	"go1/bootstrap"
+	baseconfig "go1/config"
 	"go1/pkg/config"
-	"time"
 )
 
-type Person struct {
-	Name string `json:"p_name"`
-}
-
-func (p Person) Sal() {
-	fmt.Println(p.Name)
-}
-
-var Persons map[string]Person
-
 func init() {
-	Persons = make(map[string]Person)
-	btsConfig.Initialize()
+	baseconfig.Initialize()
 }
-
-var sKey []byte
 
 func main() {
 
-	config.InitConfig("")
-	name := config.Get("app.test")
+	// 配置初始化，依赖命令行 --env 参数
+	var env string
+	flag.StringVar(&env, "env", "", "加载 .env 文件，如 --env=testing 加载的是 .env.testing 文件")
+	flag.Parse()
+	config.InitConfig(env)
 
-	fmt.Println(name)
+	router := gin.New()
 
-	return
+	// 初始化 DB
+	bootstrap.SetupDB()
 
-	//Persons = append(Persons, Person{"hahaha"})
-	//Persons = append(Persons, Person{"bbb"})
-	//Persons = append(Persons, Person{"cccc"})
+	bootstrap.SetupRoute(router)
 
-	//Persons["haha"] = Person{"hahaha"}
+	err := router.Run(":3000")
 
-	//Persons = map[string]Person{
-	//	"a": Person{"a"},
-	//}
-
-	//Persons["b"] = Person{"b"}
-	//
-	//js, _ := json.Marshal(Persons)
-	//fmt.Printf("JSON format: %s \n", js)
-	//
-	//fmt.Printf("p type is %T value is %v \n", Persons, Persons)
-	//
-	////for name, p := range Persons {
-	////	fmt.Println(name)
-	////	p.Sal()
-	////}
-	//
-	//sKey = []byte("aaa")
-	//
-	//fmt.Printf("sKye type is %T value is %v \n", sKey, sKey)
-	//
-	////var numCores = flag.Int("n", 3, "number of CPU cores to use")
-	//
-	//fmt.Println(runtime.NumCPU())
-	//
-	//return
-	//bootstrap.SetupRedis()
-	//
-	//if cahce.NewCache().SetCache("name", "hello 222") {
-	//	name := cahce.NewCache().GetCache("name", false)
-	//
-	//	fmt.Println(name)
-	//}
-	//
-	//start := time.Now()
-	//time.Sleep(5 * 1e9)
-	//end := time.Now()
-	//delta := end.Sub(start)
-	//fmt.Printf("longCalculation took this amount of time: %s  start %s \n", delta, start)
-
-	ch := make(chan int)
-
-	sendData(ch)
-
-	go getData(ch)
-	time.Sleep(1e9)
-
-}
-
-func sendData(ch chan int) {
-
-	for i := 0; i < 10; i++ {
-		ch <- i
-	}
-	//
-	//ch <- "aaa"
-	//ch <- "bbb"
-	//ch <- "ccc"
-
-}
-
-func getData(ch chan int) {
-
-	var input int
-	for {
-		input = <-ch
-		fmt.Println(input)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 }
